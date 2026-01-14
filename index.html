@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImMatterToo</title>
-    <!-- POPRAWIONE LINKI DO BIBLIOTEK (CDN) -->
-    <script src="unpkg.com"></script>
-    <script src="cdnjs.cloudflare.com"></script>
+    <title>ImMatterToo QR Protocol 2026</title>
+    <!-- LOKALNE BIBLIOTEKI Z TWOJEGO REPOZYTORIUM -->
+    <script src="html5-qrcode.min (1).js"></script>
+    <script src="qrcode.min.js"></script>
     <style>
         :root { --primary: #007bff; --bg: #0d0d0d; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; }
@@ -79,15 +79,14 @@
             document.getElementById(id).classList.add('active');
             document.getElementById('t-' + id).classList.add('active');
             
-            // Logika specyficzna dla zakładek
             if (id === 'host' && !qrCodeGenerated) {
                 generateQRCode();
                 qrCodeGenerated = true;
-                html5QrCode.stop().catch(e => {}); // Zatrzymaj skaner
+                html5QrCode.stop().catch(e => {});
             } else if (id === 'scan') {
                 startScanner();
             } else {
-                html5QrCode.stop().catch(e => {}); // Zatrzymaj skaner, jeśli przełączamy
+                html5QrCode.stop().catch(e => {}); 
             }
         }
 
