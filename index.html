@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ImMatterToo QR Protocol 2026</title>
     <!-- LOKALNE BIBLIOTEKI Z TWOJEGO REPOZYTORIUM -->
-    <script src="html5-qrcode.min (1).js"></script>
+    <script src="html5-qrcode.min(1).js"></script>
     <script src="qrcode.min.js"></script>
     <style>
         :root { --primary: #007bff; --bg: #0d0d0d; }
@@ -69,65 +69,69 @@
     </div>
 
     <script>
-        let currentBucket = "BZVwGAUSEU4XGp4G8az3rC"; // Twój klucz KVdb.io
-        let qrCodeGenerated = false;
-        let html5QrCode = new Html5Qrcode("reader"); // Globalna instancja
+        // Czekaj na załadowanie całego HTML i bibliotek, zanim uruchomisz skrypt
+        document.addEventListener('DOMContentLoaded', (event) => {
+            let currentBucket = "BZVwGAUSEU4XGp4G8az3rC"; // Twój klucz KVdb.io
+            let qrCodeGenerated = false;
+            let html5QrCode = new Html5Qrcode("reader"); // Globalna instancja
 
-        function showTab(id) {
-            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById('t-' + id).classList.add('active');
-            
-            if (id === 'host' && !qrCodeGenerated) {
-                generateQRCode();
-                qrCodeGenerated = true;
-                html5QrCode.stop().catch(e => {});
-            } else if (id === 'scan') {
-                startScanner();
-            } else {
-                html5QrCode.stop().catch(e => {}); 
-            }
-        }
-
-        // --- GENEROWANIE QR NA LAPTOPIE ---
-        function generateQRCode() {
-            const qrElement = document.getElementById("qrcode");
-            if (qrElement) {
-                new QRCode(qrElement, {
-                    text: currentBucket,
-                    width: 200,
-                    height: 200
-                });
-                document.getElementById('my-id').innerText = currentBucket;
-            }
-        }
-
-        // --- SKANOWANIE NA TELEFONIE (Moto E13) ---
-        function startScanner() {
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: 250 },
-                (decodedText) => {
-                    html5QrCode.stop();
-                    alert("Sparowano z laptopem! ID: " + decodedText);
-                    currentBucket = decodedText; 
-                    showTab('pilot');
+            function showTab(id) {
+                document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                document.getElementById('t-' + id).classList.add('active');
+                
+                if (id === 'host' && !qrCodeGenerated) {
+                    generateQRCode();
+                    qrCodeGenerated = true;
+                    html5QrCode.stop().catch(e => {});
+                } else if (id === 'scan') {
+                    startScanner();
+                } else {
+                    html5QrCode.stop().catch(e => {}); 
                 }
-            );
-        }
+            }
 
-        // --- WYSYŁANIE KOMEND (PILOT) ---
-        async function send(msg) {
-            const url = `kvdb.io{currentBucket}/status`;
-            try {
-                await fetch(url, { method: 'POST', body: msg });
-                if (navigator.vibrate) navigator.vibrate(50);
-            } catch (e) { console.error("Błąd wysyłania komendy:", e); }
-        }
+            // --- GENEROWANIE QR NA LAPTOPIE ---
+            function generateQRCode() {
+                const qrElement = document.getElementById("qrcode");
+                if (qrElement) {
+                    new QRCode(qrElement, {
+                        text: currentBucket,
+                        width: 200,
+                        height: 200
+                    });
+                    document.getElementById('my-id').innerText = currentBucket;
+                }
+            }
 
-        // Domyślnie pokaż zakładkę skanowania przy ładowaniu strony
-        showTab('scan');
+            // --- SKANOWANIE NA TELEFONIE (Moto E13) ---
+            function startScanner() {
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: 250 },
+                    (decodedText) => {
+                        html5QrCode.stop();
+                        alert("Sparowano z laptopem! ID: " + decodedText);
+                        currentBucket = decodedText; 
+                        showTab('pilot');
+                    }
+                );
+            }
+
+            // --- WYSYŁANIE KOMEND (PILOT) ---
+            async function send(msg) {
+                const url = `kvdb.io{currentBucket}/status`;
+                try {
+                    await fetch(url, { method: 'POST', body: msg });
+                    if (navigator.vibrate) navigator.vibrate(50);
+                } catch (e) { console.error("Błąd wysyłania komendy:", e); }
+            }
+
+            // Domyślnie pokaż zakładkę skanowania przy ładowaniu strony
+            showTab('scan');
+        });
     </script>
 </body>
 </html>
+
