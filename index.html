@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ImMatterToo QR Protocol 2026</title>
-    <!-- Biblioteka do skanowania QR -->
+    <!-- POPRAWIONE LINKI DO BIBLIOTEK (CDN) -->
     <script src="unpkg.com"></script>
-    <!-- Biblioteka do generowania QR -->
     <script src="cdnjs.cloudflare.com"></script>
     <style>
         :root { --primary: #007bff; --bg: #0d0d0d; }
@@ -72,9 +71,9 @@
     <script>
         let currentBucket = "BZVwGAUSEU4XGp4G8az3rC"; // Twój klucz KVdb.io
         let qrCodeGenerated = false;
+        let html5QrCode = new Html5Qrcode("reader"); // Globalna instancja
 
         function showTab(id) {
-            // Przełączanie widoku zakładek
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -84,26 +83,28 @@
             if (id === 'host' && !qrCodeGenerated) {
                 generateQRCode();
                 qrCodeGenerated = true;
+                html5QrCode.stop().catch(e => {}); // Zatrzymaj skaner
             } else if (id === 'scan') {
                 startScanner();
             } else {
-                // Zatrzymaj skaner, jeśli przełączamy na inną zakładkę niż 'scan'
-                html5QrCode.stop().catch(e => {}); 
+                html5QrCode.stop().catch(e => {}); // Zatrzymaj skaner, jeśli przełączamy
             }
         }
 
         // --- GENEROWANIE QR NA LAPTOPIE ---
         function generateQRCode() {
-            new QRCode(document.getElementById("qrcode"), {
-                text: currentBucket,
-                width: 200,
-                height: 200
-            });
-            document.getElementById('my-id').innerText = currentBucket;
+            const qrElement = document.getElementById("qrcode");
+            if (qrElement) {
+                new QRCode(qrElement, {
+                    text: currentBucket,
+                    width: 200,
+                    height: 200
+                });
+                document.getElementById('my-id').innerText = currentBucket;
+            }
         }
 
         // --- SKANOWANIE NA TELEFONIE (Moto E13) ---
-        const html5QrCode = new Html5Qrcode("reader");
         function startScanner() {
             html5QrCode.start(
                 { facingMode: "environment" }, 
@@ -111,7 +112,6 @@
                 (decodedText) => {
                     html5QrCode.stop();
                     alert("Sparowano z laptopem! ID: " + decodedText);
-                    // Po zeskanowaniu przełącz na pilota i ustaw ID laptopa jako aktywny bucket
                     currentBucket = decodedText; 
                     showTab('pilot');
                 }
