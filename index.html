@@ -3,96 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImMatterToo - Pilot 2026</title>
+    <title>ImMatterToo Ecosystem 2026</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: white; text-align: center; margin: 0; }
-        .nav { display: flex; background: #1a1a1a; position: sticky; top: 0; }
-        .tab { flex: 1; padding: 15px; cursor: pointer; border-bottom: 3px solid transparent; }
-        .tab.active { border-bottom: 3px solid #007bff; background: #252525; }
-        .content { display: none; padding: 30px; }
+        :root { --primary: #007bff; --bg: #0a0a0a; --card: #1a1a1a; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: white; margin: 0; text-align: center; }
+        
+        /* Menu Zakładek */
+        .tabs { display: flex; background: #111; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #333; }
+        .tab { flex: 1; padding: 20px; cursor: pointer; transition: 0.3s; font-weight: bold; color: #888; }
+        .tab.active { color: white; border-bottom: 4px solid var(--primary); background: #222; }
+        
+        .content { display: none; padding: 40px 20px; animation: fadeIn 0.5s; }
         .content.active { display: block; }
-        #compass { font-size: 80px; margin: 20px 0; transition: transform 0.1s; }
-        .status { padding: 10px; border-radius: 5px; background: #333; margin: 10px; }
-        button { padding: 15px 30px; font-size: 18px; border-radius: 10px; border: none; background: #007bff; color: white; cursor: pointer; }
-        .north { color: #00ff00; text-shadow: 0 0 15px #00ff00; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Kompas i Pilot */
+        .compass-ui { font-size: 100px; margin: 20px 0; transition: transform 0.2s; }
+        .north-active { color: #00ff00; text-shadow: 0 0 20px #00ff00; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 18px; cursor: pointer; margin: 10px; width: 80%; max-width: 300px; }
+        .btn-green { background: #28a745; }
+        
+        code { background: #000; padding: 5px 10px; border-radius: 5px; color: #00ff00; }
+        .status-box { background: #222; padding: 15px; border-radius: 10px; margin: 20px auto; max-width: 400px; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
-    <div class="nav">
-        <div class="tab active" onclick="openTab('android')">Android</div>
-        <div class="tab" onclick="openTab('windows')">Windows</div>
-        <div class="tab" onclick="openTab('pilot')">Pilot</div>
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('android')">ANDROID</div>
+        <div class="tab" onclick="showTab('windows')">WINDOWS</div>
+        <div class="tab" onclick="showTab('pilot')">PILOT</div>
     </div>
 
-    <!-- ZAKŁADKA ANDROID -->
+    <!-- ZAKŁADKA ANDROID (KOMPAS) -->
     <div id="android" class="content active">
-        <h2>Tryb Kompasu</h2>
-        <div id="compass">🧭</div>
-        <div id="angle">0°</div>
-        <div id="status" class="status">Czekam na kalibrację...</div>
-        <button onclick="requestAccess()">Aktywuj Czujniki</button>
+        <h1>Tryb Kompasu</h1>
+        <p>Tylko telefon musi się obrócić, by sterować komputerem.</p>
+        <div id="compass-icon" class="compass-ui">🧭</div>
+        <div id="degrees" style="font-size: 24px;">0°</div>
+        <div class="status-box" id="status-text">Czekam na aktywację...</div>
+        <button class="btn btn-green" onclick="initSensors()">AKTYWUJ CZUJNIKI</button>
     </div>
 
-    <!-- ZAKŁADKA WINDOWS -->
+    <!-- ZAKŁADKA WINDOWS (INSTRUKCJA) -->
     <div id="windows" class="content">
-        <h2>Konfiguracja Windows</h2>
-        <p>1. Pobierz skompilowany plik <code>injector.exe</code>.</p>
-        <p>2. Wciśnij <b>Win + R</b>, wpisz <code>shell:startup</code> i wklej tam plik.</p>
-        <p>3. Od teraz Twój laptop słucha komend z tej strony.</p>
+        <h1>Instalacja na Windows</h1>
+        <div class="status-box" style="text-align: left;">
+            1. Skopiuj kod skryptu Python (poniżej).<br>
+            2. Skompiluj go do <code>.exe</code> przez PyInstaller.<br>
+            3. Wrzuć plik do autostartu: <code>shell:startup</code>.<br>
+            4. Twój PC będzie reagował na obrót telefonu.
+        </div>
+        <p>Pamiętaj: PC nie potrzebuje kompasu!</p>
     </div>
 
-    <!-- ZAKŁADKA PILOT -->
+    <!-- ZAKŁADKA PILOT (RĘCZNY) -->
     <div id="pilot" class="content">
-        <h2>Pilot Ręczny</h2>
-        <button onclick="sendCommand('SPACE')">PAUZA / PLAY</button><br><br>
-        <button onclick="sendCommand('VOL_UP')">GŁOŚNIEJ</button>
+        <h1>Pilot Zdalny</h1>
+        <p>Ręczne sterowanie przez Wi-Fi/Internet</p>
+        <button class="btn" onclick="sendCmd('SPACE')">PAUZA / PLAY</button>
+        <button class="btn" onclick="sendCmd('VOL_UP')">GŁOŚNIEJ</button>
+        <button class="btn" onclick="sendCmd('VOL_DOWN')">CISZEJ</button>
     </div>
 
     <script>
-        // Zmień ten ID na dowolny unikalny ciąg znaków
-        const bridgeID = "immattertoo_user_2026"; 
-        const url = `api.keyvalue.xyz{bridgeID}`;
+        // UNIKALNY KLUCZ DLA TWOJEGO SYSTEMU
+        const BRIDGE_ID = "immattertoo_2026_xyz"; 
+        const API_URL = `api.keyvalue.xyz{BRIDGE_ID}`;
 
-        function openTab(name) {
+        function showTab(id) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
+            document.getElementById(id).classList.add('active');
             event.currentTarget.classList.add('active');
         }
 
-        async function sendCommand(cmd) {
+        async function sendCmd(msg) {
             try {
-                await fetch(url, { method: 'POST', body: cmd });
-                console.log("Wysłano:", cmd);
-            } catch (e) { console.error("Błąd sieci:", e); }
+                await fetch(API_URL, { method: 'POST', body: msg });
+                console.log("Wysłano:", msg);
+            } catch (e) { console.error("Błąd mostu:", e); }
         }
 
-        function requestAccess() {
+        function initSensors() {
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(state => {
-                    if (state === 'granted') startCompass();
+                DeviceOrientationEvent.requestPermission().then(resp => {
+                    if (resp === 'granted') window.addEventListener('deviceorientationabsolute', handleCompass);
                 });
             } else {
-                startCompass();
+                window.addEventListener('deviceorientationabsolute', handleCompass);
             }
+            document.getElementById('status-text').innerText = "Nasłuchiwanie kierunku...";
         }
 
-        function startCompass() {
-            window.addEventListener('deviceorientationabsolute', (event) => {
-                let heading = event.alpha; 
-                document.getElementById('angle').innerText = Math.round(heading) + "°";
+        let lastSent = 0;
+        function handleCompass(event) {
+            let alpha = event.alpha; // Kierunek w stopniach
+            document.getElementById('degrees').innerText = Math.round(alpha) + "°";
+            
+            // Jeśli telefon celuje w Północ (margines 15 stopni)
+            if (alpha < 15 || alpha > 345) {
+                document.getElementById('compass-icon').classList.add('north-active');
                 
-                // Jeśli telefon celuje w Północ (350-10 stopni)
-                if (heading < 15 || heading > 345) {
-                    document.getElementById('compass').className = "north";
-                    document.getElementById('status').innerText = "WYSYŁANIE KOMENDY...";
-                    sendCommand('SPACE');
-                } else {
-                    document.getElementById('compass').className = "";
-                    document.getElementById('status').innerText = "Skieruj na Północ";
+                // Anty-spam: wysyłaj komendę max raz na 2 sekundy
+                let now = Date.now();
+                if (now - lastSent > 2000) {
+                    sendCmd('SPACE');
+                    lastSent = now;
+                    document.getElementById('status-text').innerText = "WYSŁANO: SPACE";
                 }
-            });
+            } else {
+                document.getElementById('compass-icon').classList.remove('north-active');
+                document.getElementById('status-text').innerText = "Skieruj na Północ";
+            }
         }
     </script>
 </body>
